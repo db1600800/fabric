@@ -35,28 +35,28 @@ logging:
 
 peer:
 
-id: peer0.org1.abccompany.com ## Peer节点ID
+     id: peer0.org1.abccompany.com ## Peer节点ID
 
-networkId: abccompanyNetWork ## 网络ID
+     networkId: abccompanyNetWork ## 网络ID
 
-listenAddress: 0.0.0.0:7051 ## 节点监听的本地网络接口地址
+     listenAddress: 0.0.0.0:7051 ## 节点监听的本地网络接口地址
 
-chaincodeAddress: 0.0.0.0:7052 ## 链码容器连接时的监听地址 如未指定, 则使用listenAddress的IP地址和7052端口
+     chaincodeAddress: 0.0.0.0:7052 ## 链码容器连接时的监听地址 如未指定, 则使用   listenAddress的IP地址和7052端口
 
-address: 0.0.0.0:7051 ## 节点对外的服务地址 （对外的地址）【还有人说是 与同组织内其他peer通信的地址; 配置在cli节点上表示peer与其通信的地址 ？】
+     address: 0.0.0.0:7051 ## 节点对外的服务地址 （对外的地址）【还有人说是 与同组织内其他peer通信的地址; 配置在cli节点上表示peer与其通信的地址 ？】
 
-addressAutoDetect: false ## 是否自动探测服务地址 (默认 关闭， 如果启用TLS时，最好关闭)
+     addressAutoDetect: false ## 是否自动探测服务地址 (默认 关闭， 如果启用TLS时，最好关闭)
 
-gomaxprocs: -1 ## Go的进程限制数 runtime.GOMAXPROCS(n) 默认 -1
+     gomaxprocs: -1 ## Go的进程限制数 runtime.GOMAXPROCS(n) 默认 -1
 
-keepalive: ## 客户端和peer间的网络心跳连接配置
-　　　　　minInterval: 60s ## 最小的心跳间隔时间
-　　　　　client: ## 该节点和客户端 的交互配置
-　　　　　　　　　　　　　interval: 60s ## 和客户端 的心跳间隔 必须 interval >= minInterval
-　　　　　　　　　　　　　timeout: 20s ## 和客户端 间的网络连接超时时间
-　　　　　deliveryClient: ## 交付客户端用于与订购节点通信的心跳
-　　　　　　　　　　　　　interval: 60s
-　　　　　　　　　　　　　timeout: 20s
+     keepalive: ## 客户端和peer间的网络心跳连接配置
+　　　　    　minInterval: 60s ## 最小的心跳间隔时间
+　　　　　    client: ## 该节点和客户端 的交互配置
+　　　　　　　　　　　  　　interval: 60s ## 和客户端 的心跳间隔 必须 interval >= minInterval
+　　　　　　　　　　　　  　timeout: 20s ## 和客户端 间的网络连接超时时间
+　　　　　    deliveryClient: ## 交付客户端用于与订购节点通信的心跳
+　　　　　　　　　　　　　      interval: 60s
+　　　　　　　　　　　　    　  timeout: 20s
 
 
 
