@@ -1,5 +1,18 @@
 ###############################################################################
-## 日志级别有： critical、 error、 warning、 notice、 info、 debug 级别由大到小， ##  级别越小输出越详细
+## 
+##配置文件中需要注意的部分是：
+##peer->address，peer的IP地址；
+##peer->gossip->tls，该部分的通讯证书路径很关键，如果路径不正确将无法和peer进行通讯；
+##chaincode->node，确定chaincode的运行模式，有"dev"和"net"两种。"dev"模式用于开发调##试chaincode时使用，"net"模式用于正常运行网络。
+##4.ledger->state->stateDatabase，设置保存状态（state）的数据库。
+##有“goleveldb”和“CouchDB”两种数据库可选。其中“CouchDB”支持富查询，功能
+##较“goleveldb”更丰富。
+
+##peer->gossip->tls下各证书都是根据crypto-config.yaml文件使用cryptogen工具生成的，具体路径需要根据实际情况设置。
+##file: crypto-config/peerOrganizations/orga.cardchain.com/peers/peer0.orga.cardchain.com/tls/server.crt
+       
+
+##日志级别有： critical、 error、 warning、 notice、 info、 debug 级别由大到小， ##  级别越小输出越详细
 ###############################################################################
 
 
@@ -175,88 +188,66 @@ BCCSP: ## 加密库配置 与Orderer 配置一样
                  KeyStore:
 
 
-mspConfigPath: msp ## abccompany msp 的本地路径
+mspConfigPath: msp ## abccompany msp 的本地路径 ( crypto-config/peerOrganizations/orga.cardchain.com/peers/peer0.orga.cardchain.com/msp)
 
 
 localMspId: Org1MSP ## abccompany  Peer 所关联的MSP 的ID
 
 
 client: ## cli 公共客户端配置选项
-
-connTimeout: 3s ## 连接超时时间
+      connTimeout: 3s ## 连接超时时间
 
 
 
 deliveryclient: ## 交付服务配置
-
-reconnectTotalTimeThreshold: 3600s ## 交付服务交付失败后尝试重连的时间
-
-connTimeout: 3s ## 交付服务和 orderer节点的连接超时时间
-
-reConnectBackoffThreshold: 3600s ## 设置连续重试之间的最大延迟
+     reconnectTotalTimeThreshold: 3600s ## 交付服务交付失败后尝试重连的时间
+     connTimeout: 3s ## 交付服务和 orderer节点的连接超时时间
+     reConnectBackoffThreshold: 3600s ## 设置连续重试之间的最大延迟
 
 
 localMspType: bccsp ## 本地MSP类型 （默认为 BCCSP）
 
 
 profile: ## 是否启用Go自带的profiling 支持进行调试
-
-enabled: false
-
-listenAddress: 0.0.0.0:6060
+     enabled: false
+     listenAddress: 0.0.0.0:6060
 
 
 adminService: ## admin服务用于管理操作，例如控制日志模块严重性等。只有对等管理员才能使用该服务
 
 
 handlers:
-
-authFilters:
-
--
-
-name: DefaultAuth
-
--
-
-name: ExpirationCheck ## 此筛选器检查身份x509证书过期
-
-decorators:
-
--
-
-name: DefaultDecorator
-
-endorsers:
-
-escc:
-
-name: DefaultEndorsement
-
-library:
-
-validators:
-
-vscc:
-
-name: DefaultValidation
-
-library:
+   authFilters:
+       -
+         name: DefaultAuth
+       -
+         name: ExpirationCheck ## 此筛选器检查身份x509证书过期
+   decorators:
+       -
+         name: DefaultDecorator
+   endorsers:
+   escc:
+       name: DefaultEndorsement
+       library:
+   validators:
+   vscc:
+       name: DefaultValidation
+       library:
 
 validatorPoolSize: ## 处理交易验证的并发数, 默认是CPU的核数
 
 
-discovery: ## 客户端使用发现服务来查询有关peers的信息，例如 - 哪些peer已加入某个channel，最新的channel配置是什么，最重要的是 - 给定chaincode和channel，哪些可能的peer满足认可 policy
+ ## 客户端使用发现服务来查询有关peers的信息，例如 - 哪些peer已加入某个channel，最新##的channel配置是什么，最重要的是 - 给定chaincode和channel，哪些可能的peer满足认可 ##policy
+##
+discovery:
+   enabled: true
+   authCacheEnabled: true
+   authCacheMaxSize: 1000
+   authCachePurgeRetentionRatio: 0.75
+   orgMembersAllowedAccess: false
 
-enabled: true
 
-authCacheEnabled: true
 
-authCacheMaxSize: 1000
-
-authCachePurgeRetentionRatio: 0.75
-
-orgMembersAllowedAccess: false
 
 ###############################################################################
 
@@ -269,52 +260,27 @@ orgMembersAllowedAccess: false
 ###############################################################################
 
 vm:
-
-
-endpoint: unix:///var/run/docker.sock ## Docker Daemon 地址，默认是本地 套接字
-
-
-docker:
-
-tls: ## Docker Daemon 启用TLS时的相关证书配置, 包括信任的根CA证书、服务身份证书、签名私钥等等
-
-enabled: false
-
-ca:
-
-file: docker/ca.crt
-
-cert:
-
-file: docker/tls.crt
-
-key:
-
-file: docker/tls.key
-
-
-attachStdout: false ## 是否启用绑定到标准输出，启用后 链码容器 的输出消息会绑定到标准输出，方便进行调试
-
-
-hostConfig: ## Docker 相关的主机配置，包括网络配置、日志、内存等等，这些配置在启动链码容器时进行使用
-
-NetworkMode: host
-
-Dns:
-
-# - 192.168.0.1
-
-LogConfig:
-
-Type: json-file
-
-Config:
-
-max-size: "50m"
-
-max-file: "5"
-
-Memory: 2147483648
+  endpoint: unix:///var/run/docker.sock ## Docker Daemon 地址，默认是本地 套接字
+  docker:
+       tls: ## Docker Daemon 启用TLS时的相关证书配置, 包括信任的根CA证书、服务身份证书、签名私钥等等
+          enabled: false
+          ca:
+            file: docker/ca.crt
+          cert:
+            file: docker/tls.crt
+          key:
+            file: docker/tls.key
+        attachStdout: false ## 是否启用绑定到标准输出，启用后 链码容器 的输出消息会绑定到标准输出，方便进行调试
+        hostConfig: ## Docker 相关的主机配置，包括网络配置、日志、内存等等，这些配置在启动链码容器时进行使用
+            NetworkMode: host
+            Dns:
+               # - 192.168.0.1
+            LogConfig:
+                  Type: json-file
+                  Config:
+                      max-size: "50m"
+                      max-file: "5"
+            Memory: 2147483648
 
 
 ###############################################################################
@@ -328,73 +294,40 @@ Memory: 2147483648
 ###############################################################################
 
 chaincode:
+   id: ## 记录链码相关信息，包括路径、名称、版本等等，该信息会以标签形式写到链码容器
+     path:
+     name:
+   builder: $(DOCKER_NS)/fabric-ccenv:latest ## 通用的本地编译环境，是一个Docker 镜像
+   pull: false ##
+   golang: ## Go语言的链码部署生成镜像的基础Docker镜像
+        runtime: $(BASE_DOCKER_NS)/fabric-baseos:$(ARCH)-$(BASE_VERSION)
+        dynamicLink: false
+   car: ## car格式的链码部署生成镜像的基础Docker 镜像
+      runtime: $(BASE_DOCKER_NS)/fabric-baseos:$(ARCH)-$(BASE_VERSION)
+   java: ## abccompany 1.1 1.2 java语言的基础镜像
+      ##Dockerfile: |
+        ##   from $(DOCKER_NS)/fabric-javaenv:$(ARCH)-1.1.0
+        ##1.3 
+       runtime: $(DOCKER_NS)/fabric-javaenv:$(ARCH)-$(PROJECT_VERSION)
 
-
-id: ## 记录链码相关信息，包括路径、名称、版本等等，该信息会以标签形式写到链码容器
-
-path:
-
-name:
-
-
-builder: $(DOCKER_NS)/fabric-ccenv:latest ## 通用的本地编译环境，是一个Docker 镜像
-
-pull: false ##
-
-golang: ## Go语言的链码部署生成镜像的基础Docker镜像
-
-runtime: $(BASE_DOCKER_NS)/fabric-baseos:$(ARCH)-$(BASE_VERSION)
-
-dynamicLink: false
-
-car: ## car格式的链码部署生成镜像的基础Docker 镜像
-
-runtime: $(BASE_DOCKER_NS)/fabric-baseos:$(ARCH)-$(BASE_VERSION)
-
-java: ## java语言的基础镜像
-
-Dockerfile: |
-
-from $(DOCKER_NS)/fabric-javaenv:$(ARCH)-1.1.0
-
-node: ## node.js的基础镜像
-
-runtime: $(BASE_DOCKER_NS)/fabric-baseimage:$(ARCH)-$(BASE_VERSION)
-
-
-startuptimeout: 300s ## 启动链码容器超时，等待超时时间后还没收到链码段的注册消息，则认为启动失败
-
-
-executetimeout: 30s ## invoke 和 initialize 命令执行超时时间
-
-
-deploytimeout: ## 部署链码的命令执行超时时间
-
-mode: net ## 执行链码的模式，dev: 允许本地直接运行链码，方便调试； net: 意味着在容器中运行链码
-
-keepalive: 0 ## Peer 和链码之间的心跳超市时间， <= 0 意味着关闭
-
-system: ## 系统链码的相关配置 (系统链码白名单 ??)
-
-cscc: enable
-
-lscc: enable
-
-escc: enable
-
-vscc: enable
-
-qscc: enable
-
-systemPlugins: ## 系统链码插件
-
-logging: ## 链码容器日志相关配置
-
-level: info
-
-shim: warning
-
-format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
+    node: ## node.js的基础镜像
+       runtime: $(BASE_DOCKER_NS)/fabric-baseimage:$(ARCH)-$(BASE_VERSION)
+    startuptimeout: 300s ## 启动链码容器超时，等待超时时间后还没收到链码段的注册消息，则认为启动失败
+    executetimeout: 30s ## invoke 和 initialize 命令执行超时时间
+    deploytimeout: ## 部署链码的命令执行超时时间
+    mode: net ## 执行链码的模式，dev: 允许本地直接运行链码，方便调试； net: 意味着在容器中运行链码
+    keepalive: 0 ## Peer 和链码之间的心跳超市时间， <= 0 意味着关闭
+    system: ## 系统链码的相关配置 (系统链码白名单 ??)
+        cscc: enable
+        lscc: enable
+        escc: enable
+        vscc: enable
+        qscc: enable
+    systemPlugins: ## 系统链码插件
+    logging: ## 链码容器日志相关配置
+        level: info
+        shim: warning
+        format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
 
 
 ###############################################################################
@@ -411,37 +344,28 @@ format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} ->
 
 ledger:
 
-blockchain: ## 设置系统区块链的整体配置，【后面会被丢弃】
+    blockchain: ## 设置系统区块链的整体配置，【后面会被丢弃】
+    state: ## 状态DB的相关配置(包括 golevelDB、couchDB)、DN连接、查询最大返回记录数等
+     ##stateDatabase: goleveldb ## stateDB的底层DB配置 (默认golevelDB)
 
-state: ## 状态DB的相关配置(包括 golevelDB、couchDB)、DN连接、查询最大返回记录数等
-
-stateDatabase: goleveldb ## stateDB的底层DB配置 (默认golevelDB)
-
-couchDBConfig: ## 如果启用couchdb，配置连接信息 (goleveldb 不需要配置这些)
-
-couchDBAddress: 127.0.0.1:5984
-
-username:
-
-o prevent unintended users from discovering the password.
-
-password:
-
-maxRetries: 3 ## 运行时出错重试数
-
-maxRetriesOnStartup: 10 ## 启动时出错的重试数
-
-requestTimeout: 35s ## 请求超时时间
-
-queryLimit: 10000 ## 每个查询最大返回数
-
-maxBatchUpdateSize: 1000 ## 批量更新最大记录数
-
-warmIndexesAfterNBlocks: 1
+     stateDatabase: CouchDB     ##
+     totalQueryLimit: 100000    ## abccompany 1.3特有
+     couchDBConfig: ## 如果启用couchdb，配置连接信息 (goleveldb 不需要配置这些)
+         couchDBAddress: 127.0.0.1:5984
+         username:admin
+         password:admin
+         maxRetries: 3 ## 运行时出错重试数
+         maxRetriesOnStartup: 10 ## 启动时出错的重试数
+         requestTimeout: 35s ## 请求超时时间
+         queryLimit: 10000 ## abccompany 1.1 1.2 每个查询最大返回数
+         internalQueryLimit: 1000 ## abccompany  1.3特有
+         maxBatchUpdateSize: 1000 ## 批量更新最大记录数
+         warmIndexesAfterNBlocks: 1
+         createGlobalChangesDB: false
+    
 
 history:
-
-enableHistoryDatabase: true ## 是否启用历史数据库，默认开启
+   enableHistoryDatabase: true ## 是否启用历史数据库，默认开启
 
 
 ###############################################################################
@@ -457,21 +381,12 @@ enableHistoryDatabase: true ## 是否启用历史数据库，默认开启
 ###############################################################################
 
 metrics:
-
-enabled: false ## 是否开启监控服务
-
-reporter: statsd
-
-interval: 1s
-
-statsdReporter:
-
-address: 0.0.0.0:8125
-
-flushInterval: 2s
-
-flushBytes: 1432
-
-promReporter: ## prometheus 普罗米修斯服务监听地址
-
-listenAddress: 0.0.0.0:8080
+   enabled: false ## 是否开启监控服务
+   reporter: statsd
+   interval: 1s
+   statsdReporter:
+           address: 0.0.0.0:8125
+           flushInterval: 2s
+           flushBytes: 1432
+   promReporter: ## prometheus 普罗米修斯服务监听地址
+       listenAddress: 0.0.0.0:8080
