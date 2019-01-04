@@ -1,0 +1,32 @@
+OrdererOrgs: ## 定义Orderer组织结构
+    - Name: Orderer ## Orderer的名称
+      Domain: abccompany.com ## 组织的命名域
+      Specs:
+
+         - Hostname: orderer
+
+# ---------------------------------------------------------------------------
+
+# "PeerOrgs" - 管理Peer节点的组织的定义
+
+# ---------------------------------------------------------------------------
+
+PeerOrgs:
+   - Name: Org1 ## 组织名称 组织 1
+     Domain: org1.abccompany.com ## 组织域
+     EnableNodeOUs: true ## 如果设置了EnableNodeOUs，就在msp下生成config.yaml文件
+     Template: ## 允许定义从模板顺序创建的1个或多个主机。 默认情况下，这看起来像是从0到Count-1的“peer”。 您可以覆盖节点数（Count），起始索引（Start）或用于构造名称的模板（Hostname）。
+          Count: 2 ## 表示生成几个Peer
+
+     # Count: 除Admin之外的用户帐户数量
+     Users:
+          Count: 2 ## 表示生成几个 普通User
+
+
+   - Name: Org2
+     Domain: org2.abccompany.com
+     EnableNodeOUs: true
+     Template:
+          Count: 2
+     Users:
+          Count: 2

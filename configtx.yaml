@@ -1,0 +1,277 @@
+## 一些列组织的定义，【被其他 部分引用】
+##
+## 【注意】：本文件中 &KEY 均为 *KEY 所引用； xx：&KEY 均为 <<: *KEY 所引用
+##
+
+Organizations:
+
+
+## 定义Orderer组织 【&OrdererOrg 这类语法类似 Go的中的指针及对象地址， 此处是被Profiles 中的 - *OrdererOrg 所引用，以下均为类似做法】
+
+    - &OrdererOrg
+            Name: OrdererOrg ## Orderer的组织的名称
+            ID: OrdererMSP ## Orderer 组织的ID （ID是引用组织的关键）
+            MSPDir: crypto-config/ordererOrganizations/abccompany.com/msp ## Orderer的 MSP 证书目录路径
+
+            Policies:
+              Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+              Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+              Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+##AdminPrincipal: Role.ADMIN ## 【可选项】 组织管理员所需要的身份，可选项: Role.ADMIN 和 Role.MEMBER
+
+
+## 定义Peer组织 1
+
+   - &Org1
+         Name: Org1MSP ## 组织名称
+         ID: Org1MSP ## 组织ID
+         MSPDir: crypto-config/peerOrganizations/org1.abccompany.com/msp ## Peer的MSP 证书目录路径
+         Policies:
+              Readers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin','Org1MSP.member')"
+              Writers:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin','Org1MSP.member')"
+              Admins:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin')"
+
+         AnchorPeers: ## 定义组织锚节点 用于跨组织 Gossip 通信
+                - Host: peer0.org1.abccompany.com ## 锚节点的主机名
+                  Port: 7051 ## 锚节点的端口号
+
+
+## 定义Peer组织 2
+
+    - &Org2
+        Name: Org2MSP
+        ID: Org2MSP
+        MSPDir: crypto-config/peerOrganizations/org2.abccompany.com/msp
+        AnchorPeers:
+              - Host: peer0.org2.abccompany.com
+                Port: 7051
+
+
+################################################################################
+#
+# SECTION: Capabilities 【注意】： 该部分是 V1.1.0 版本提出来的， 不可以在更早的版本中使用
+#
+# - 本节定义了 fabric 网络的功能. 这是v1.1.0中的一个新概念，不应在v1.0.x的peer和orderers中使用.
+# Capabilities 定义了存在于结构二进制文件中的功能，以便该二进制文件安全地参与结构网络.
+# 例如，如果添加了新的MSP类型，则较新的二进制文件可能会识别并验证此类型的签名，而没有此支持的旧二进制文件将无法验证这些事务.
+# 这可能导致具有不同世界状态的不同版本的结构二进制文件。 相反，为通道定义功能会通知那些没有此功能的二进制文件，
+# 它们必须在升级之前停止处理事务. 对于v1.0.x，如果定义了任何功能（包括关闭所有功能的配置），那么v1.0.x的peer 会主动崩溃.
+#
+################################################################################
+
+Capabilities:
+
+## 通道功能适用于orderers and the peers，并且必须得到两者的支持。 将功能的值设置为true.
+
+      Channel: &ChannelCapabilities
+
+## V1.1 的 Global是一个行为标记，已被确定为运行v1.0.x的所有orderers和peers的行为，但其修改会导致不兼容。 用户应将此标志设置为true.
+
+           V1_1: true
+
+
+## Orderer功能仅适用于orderers，可以安全地操纵，而无需担心升级peers。 将功能的值设置为true
+
+      Orderer: &OrdererCapabilities
+
+## Orderer 的V1.1是行为的一个标记，已经确定为运行v1.0.x的所有orderers 都需要，但其修改会导致不兼容。 用户应将此标志设置为true
+
+              V1_1: true
+
+
+## 应用程序功能仅适用于Peer 网络，可以安全地操作，而无需担心升级或更新orderers。 将功能的值设置为true
+
+       Application: &ApplicationCapabilities
+
+## V1.2 for Application是一个行为标记，已被确定为运行v1.0.x的所有peers所需的行为，但其修改会导致不兼容。 用户应将此标志设置为true
+
+           V1_3: true
+           V1_2: false
+           V1_1: false
+
+
+
+
+
+
+
+################################################################################
+#
+# SECTION: Application
+#
+# - 应用通道相关配置，主要包括 参与应用网络的可用组织信息
+#
+################################################################################
+
+Application: &ApplicationDefaults ## 自定义被引用的地址
+       Organizations: ## 加入通道的组织信息
+       Policies: &ApplicationDefaultPolicies
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+
+
+
+################################################################################
+#
+# SECTION: Orderer
+#
+# - Orderer 系统通道相关配置，包括 Orderer 服务配置和参与Orderer 服务的可用组织
+#
+# Orderer 默认是 solo 的 且不包含任何组织 【主要被 Profiles 部分引用】
+################################################################################
+
+Orderer: &OrdererDefaults ## 自定义被引用的地址
+    OrdererType: kafka ## Orderer 类型，包含 solo 和 kafka 集群
+    Addresses: ## 服务地址
+         - orderer.abccompany.com:7050
+    BatchTimeout: 2s ## 区块打包的最大超时时间 (到了该时间就打包区块)
+    BatchSize: ## 区块打包的最大包含交易数
+        MaxMessageCount: 10 ## 一个区块里最大的交易数
+        AbsoluteMaxBytes: 99 MB ## 一个区块的最大字节数， 任何时候都不能超过
+        PreferredMaxBytes: 512 KB ## 一个区块的建议字节数，如果一个交易消息的大小超过了这个值, 就会被放入另外一个更大的区块中
+    MaxChannels: 0 ## 【可选项】 表示Orderer 允许的最大通道数， 默认 0 表示没有最大通道数
+
+
+
+   Kafka:
+    Brokers: 
+    - kafka.abccompany.com:9092       # 可以填入多个kafka节点的地址
+    - kafka.abccompany.com:9093 
+    - kafka.abccompany.com:9094 
+   Organizations: ## 参与维护 Orderer 的组织，默认为空
+   
+   Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+   Capabilities:
+        <<: *OrdererCapabilities
+
+
+
+
+
+
+Channel: &ChannelDefaults
+    # Policies defines the set of policies at this level of the config tree
+    # For Channel policies, their canonical path is
+    #   /Channel/<PolicyName>
+    Policies:
+        # Who may invoke the 'Deliver' API
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        # Who may invoke the 'Broadcast' API
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        # By default, who may modify elements at this config level
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+
+    # Capabilities describes the channel level capabilities, see the
+    # dedicated Capabilities section elsewhere in this file for a full
+    # description
+    Capabilities:
+        <<: *ChannelCapabilities
+
+################################################################################
+#
+# Profile
+#
+# - 一系列通道配置模板，包括Orderer 系统通道模板 和 应用通道类型模板
+
+#
+
+################################################################################
+
+Profiles:
+
+
+## Orderer的 系统通道模板 必须包括 Orderer、 Consortiums 两部分
+
+TwoOrgsOrdererGenesis: ## Orderer 系统的通道及创世块配置。通道为默认配置，添加一个OrdererOrg 组织， 联盟为默认的 SampleConsortium 联盟，添加了两个组织 【该名称可以自定义 ？？】
+
+Capabilities:
+
+<<: *ChannelCapabilities
+
+
+Orderer: ## 指定Orderer系统通道自身的配置信息
+
+<<: *OrdererDefaults ## 引用 Orderer 部分的配置 &OrdererDefaults
+
+Organizations:
+
+- *OrdererOrg ## 属于Orderer 的通道组织 该处引用了 【 &OrdererOrg 】位置内容
+
+Capabilities:
+
+<<: *OrdererCapabilities
+
+
+Consortiums: ## Orderer 所服务的联盟列表
+
+SampleConsortium: ## 创建更多应用通道时的联盟 引用 TwoOrgsChannel 所示
+
+Organizations:
+
+- *Org1
+
+- *Org2
+
+
+## 应用通道模板 必须包括 Application、 Consortium 两部分
+
+TwoOrgsChannel: ## 应用通道配置。默认配置的应用通道，添加了两个组织。联盟为SampleConsortium
+
+Consortium: SampleConsortium ## 通道所关联的联盟名称
+
+Application: ## 指定属于某应用通道的信息，主要包括 属于通道的组织信息
+
+<<: *ApplicationDefaults
+
+Organizations: ## 初始 加入应用通道的组织
+
+- *Org1
+
+- *Org2
+
+Capabilities:
+
+<<: *ApplicationCapabilities
