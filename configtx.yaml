@@ -215,63 +215,33 @@ Channel: &ChannelDefaults
 # Profile
 #
 # - 一系列通道配置模板，包括Orderer 系统通道模板 和 应用通道类型模板
-
 #
-
 ################################################################################
 
 Profiles:
-
-
 ## Orderer的 系统通道模板 必须包括 Orderer、 Consortiums 两部分
+    TwoOrgsOrdererGenesis: ## Orderer 系统的通道及创世块配置。通道为默认配置，添加一个OrdererOrg 组织， 联盟为默认的 SampleConsortium 联盟，添加了两个组织 【该名称可以自定义 ？？】
 
-TwoOrgsOrdererGenesis: ## Orderer 系统的通道及创世块配置。通道为默认配置，添加一个OrdererOrg 组织， 联盟为默认的 SampleConsortium 联盟，添加了两个组织 【该名称可以自定义 ？？】
-
-Capabilities:
-
-<<: *ChannelCapabilities
-
-
-Orderer: ## 指定Orderer系统通道自身的配置信息
-
-<<: *OrdererDefaults ## 引用 Orderer 部分的配置 &OrdererDefaults
-
-Organizations:
-
-- *OrdererOrg ## 属于Orderer 的通道组织 该处引用了 【 &OrdererOrg 】位置内容
-
-Capabilities:
-
-<<: *OrdererCapabilities
-
-
-Consortiums: ## Orderer 所服务的联盟列表
-
-SampleConsortium: ## 创建更多应用通道时的联盟 引用 TwoOrgsChannel 所示
-
-Organizations:
-
-- *Org1
-
-- *Org2
+        <<: *ChannelDefaults 
+        Orderer: ## 指定Orderer系统通道自身的配置信息
+             <<: *OrdererDefaults ## 引用 Orderer 部分的配置 &OrdererDefaults
+             Organizations:
+                     - *OrdererOrg ## 属于Orderer 的通道组织 该处引用了 【 &OrdererOrg 】位置内容
+             Consortiums: ## Orderer 所服务的联盟列表
+                  SampleConsortium: ## 创建更多应用通道时的联盟 引用 TwoOrgsChannel 所示
+                         Organizations:
+                                  - *Org1
+                                  - *Org2
 
 
 ## 应用通道模板 必须包括 Application、 Consortium 两部分
 
-TwoOrgsChannel: ## 应用通道配置。默认配置的应用通道，添加了两个组织。联盟为SampleConsortium
+   TwoOrgsChannel: ## 应用通道配置。默认配置的应用通道，添加了两个组织。联盟为    SampleConsortium
+          Consortium: SampleConsortium ## 通道所关联的联盟名称
+          Application: ## 指定属于某应用通道的信息，主要包括 属于通道的组织信息
+                <<: *ApplicationDefaults
+                Organizations: ## 初始 加入应用通道的组织
+                        - *Org1
+                        - *Org2
 
-Consortium: SampleConsortium ## 通道所关联的联盟名称
 
-Application: ## 指定属于某应用通道的信息，主要包括 属于通道的组织信息
-
-<<: *ApplicationDefaults
-
-Organizations: ## 初始 加入应用通道的组织
-
-- *Org1
-
-- *Org2
-
-Capabilities:
-
-<<: *ApplicationCapabilities
