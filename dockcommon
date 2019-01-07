@@ -3,7 +3,7 @@ service docker stop
 
 
 sudo docker ps -a
-sudo docker rm -f ---
+sudo docker rm -f containerId
 sudo docker imagdes
 
 sudo docker-compose -f xx.yml up -d
@@ -11,13 +11,15 @@ sudo docker-compose up -d
 sudo docker-compose scale kafka=2
 
 
-
+创建主题
 kafka-topics.sh --create --topic test --zookeeper zookeeper1:2181 --replication-factor 1 --partitions 1 
-
+查看主题
 kafka-topics.sh --zookeeper zookeeper1:2181 --describe --topic test
 
+发布消息
 kafka-console-producer.sh --topic=test --broker-list kafka1:9092
 
+查询消息
 kafka-console-consumer.sh --bootstrap-server kafka1:9092 --from-beginning --topic test
 
 
