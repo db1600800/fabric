@@ -1,0 +1,13 @@
+service docker start
+service docker stop
+
+
+sudo docker ps
+sudo docker rm -f ---
+sudo docker imagdes
+
+sudo docker-compose -f xx.yml up -d
+sudo docker-compose up -d
+sudo docker-compose scale kafka=2
+
+
